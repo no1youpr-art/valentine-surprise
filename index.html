@@ -1,0 +1,756 @@
+<!DOCTYPE html> 
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>For You 💖</title>
+
+<style>
+body{
+  margin:0;
+  font-family:'Segoe UI','Prompt',sans-serif;
+  background:linear-gradient(135deg,#ff9ecf,#ffd6ec);
+  overflow-x:hidden;
+  text-align:center;
+}
+
+/* Floating Hearts */
+.heart{
+  position:fixed;
+  bottom:-50px;
+  font-size:20px;
+  opacity:0.4;
+  animation:floatUp 10s linear infinite;
+  z-index: 5;
+  pointer-events: none;
+}
+@keyframes floatUp{
+  0%{ transform:translateY(0); opacity:0.5;}
+  100%{ transform:translateY(-120vh); opacity:0;}
+}
+
+/* เกมเก็บหัวใจ */
+#game{
+  position:fixed;
+  inset:0;
+  background:rgba(255,255,255,0.95);
+  display:none;
+  overflow:hidden;
+  z-index:999;
+}
+
+.falling-heart{
+  position:absolute;
+  font-size:28px;
+  cursor:pointer;
+  animation:fall linear forwards;
+}
+
+@keyframes fall{
+  from{transform:translateY(-50px);}
+  to{transform:translateY(110vh);}
+}
+
+/* หน้าแรก */
+.container{
+  min-height:100vh;
+  display:flex;
+  flex-direction:column;
+  justify-content:center;
+  align-items:center;
+  gap:25px;
+  position: relative;
+  z-index: 10;
+}
+.main-img{
+  width:300px;
+  max-width:85%;
+  border-radius:25px;
+  box-shadow:0 20px 40px rgba(255,105,180,0.4);
+  animation:float 4s ease-in-out infinite;
+}
+@keyframes float{
+  0%{ transform:translateY(0);}
+  50%{ transform:translateY(-10px);}
+  100%{ transform:translateY(0);}
+}
+button{
+  padding:14px 35px;
+  border:none;
+  border-radius:30px;
+  background:white;
+  color:#ff4d94;
+  font-size:16px;
+  cursor:pointer;
+  box-shadow:0 5px 20px rgba(0,0,0,0.1);
+  transition: 0.3s;
+  position: relative;
+  z-index: 20;
+}
+button:active { transform: scale(0.95); }
+
+/* Popup PIN */
+.popup{
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,0.4);
+  display:none;
+  justify-content:center;
+  align-items:center;
+  z-index: 1000;
+}
+.pin-box{
+  background:white;
+  padding:30px;
+  border-radius:25px;
+  width:90%;
+  max-width:350px;
+}
+.pin-display{
+  display:flex;
+  justify-content:center;
+  gap:10px;
+  margin:20px 0;
+}
+.pin-dot{
+  width:20px;
+  height:20px;
+  border-radius:50%;
+  border:2px solid #ff4d94;
+}
+.pin-dot.filled{
+  background:#ff4d94;
+}
+.keypad{
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:10px;
+}
+.keypad button{
+  padding:15px;
+  border-radius:15px;
+  background:#ffe6f2;
+  font-size:18px;
+}
+.keypad .confirm{
+  background:#ff4d94;
+  color:white;
+}
+
+/* --- ส่วนของ Quiz --- */
+#quiz-page {
+    position: fixed;
+    inset: 0;
+    background: linear-gradient(135deg,#ff9ecf,#ffd6ec);
+    display: none;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    z-index: 1100;
+}
+.quiz-card {
+    background: rgba(255, 255, 255, 0.9);
+    padding: 40px 20px;
+    border-radius: 30px;
+    width: 85%;
+    max-width: 400px;
+    box-shadow: 0 15px 35px rgba(0,0,0,0.1);
+}
+.quiz-card h2 { color: #d63384; margin-bottom: 5px; }
+.quiz-card p { color: #888; font-size: 14px; margin-bottom: 20px; }
+.question-box {
+    border: 2px dashed #ffb3d9;
+    padding: 15px;
+    border-radius: 15px;
+    margin-bottom: 20px;
+    font-weight: bold;
+    color: #555;
+}
+.options {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+.option-btn {
+    background: white;
+    border: 1px solid #ffe6f2;
+    padding: 12px;
+    border-radius: 20px;
+    color: #ff4d94;
+    cursor: pointer;
+}
+.option-btn.selected {
+    background: #e6ffed;
+    border-color: #52c41a;
+    color: #237804;
+}
+.nav-btns {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 25px;
+    gap: 10px;
+}
+.nav-btns button {
+    flex: 1;
+    padding: 10px;
+    border-radius: 20px;
+}
+.btn-next { background: #ff4d94; color: white; }
+.btn-back { background: #eee; color: #666; }
+
+/* ส่วนสรุปผล % */
+#result-page {
+    position: fixed;
+    inset: 0;
+    background: #fff0f6;
+    display: none;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    z-index: 1200;
+}
+
+.heart-visual {
+    position: relative;
+    width: 200px;
+    height: 180px;
+    margin-bottom: 20px;
+    animation: heartBeat 1.5s infinite;
+}
+
+@keyframes heartBeat {
+  0% { transform: scale(1); }
+  15% { transform: scale(1.15); }
+  30% { transform: scale(1); }
+  45% { transform: scale(1.15); }
+  70% { transform: scale(1); }
+}
+
+.heart-svg {
+    width: 100%;
+    height: 100%;
+    filter: drop-shadow(0 5px 15px rgba(255, 77, 148, 0.3));
+}
+
+.heart-bg { fill: #f0f0f0; }
+.heart-fill-path { 
+    fill: #ff4d94;
+    transition: all 1.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.result-btn-group {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-top: 20px;
+    width: 250px;
+}
+
+.result-nav-btns {
+    display: flex;
+    gap: 10px;
+}
+
+/* หน้าจบสวยๆ */
+#final-page {
+    position: fixed;
+    inset: 0;
+    background: linear-gradient(135deg,#ff9ecf,#ffd6ec);
+    display: none;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    z-index: 1300;
+}
+
+/* Gallery - Timeline Map Mode */
+.hidden{ display:none; }
+.gallery{ 
+  padding:40px 15px; 
+  position: relative; 
+  z-index: 10;
+  min-height: 100vh;
+}
+#timeline-canvas {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: -1;
+  pointer-events: none;
+}
+.grid{
+  display:flex;
+  flex-wrap:wrap;
+  justify-content:center;
+  gap:40px; /* เพิ่มระยะห่างให้เห็นเส้นโยง */
+  margin-top: 30px;
+}
+.polaroid{
+  background:white;
+  padding:10px 10px 30px;
+  width:160px;
+  border-radius:5px; /* ปรับให้ดูเป็นกระดาษโน้ตสืบสวน */
+  box-shadow:5px 5px 15px rgba(0,0,0,0.3);
+  position:relative;
+  transition: transform 0.3s;
+}
+.polaroid:hover { transform: scale(1.05) rotate(0deg) !important; z-index: 50; }
+
+.date-tag {
+  position: absolute;
+  top: -10px;
+  right: -10px;
+  background: #ff4d94;
+  color: white;
+  padding: 2px 8px;
+  font-size: 10px;
+  border-radius: 5px;
+  transform: rotate(15deg);
+  box-shadow: 2px 2px 5px rgba(0,0,0,0.2);
+  z-index: 15;
+}
+
+.polaroid img{
+  width:100%;
+  border-radius:2px;
+  display:block;
+}
+.canvas-cover{
+  position:absolute;
+  top:10px;
+  left:10px;
+  width:calc(100% - 20px);
+  z-index:10;
+}
+.caption{
+  margin-top:8px;
+  font-size:13px;
+  min-height:40px;
+  font-weight:500;
+  line-height: 1.2;
+}
+.message{
+  margin-top:50px;
+  background:rgba(255,255,255,0.9);
+  padding:20px;
+  border-radius:15px;
+  width:85%;
+  max-width:400px;
+  margin-left:auto;
+  margin-right:auto;
+  border: 2px solid #ff4d94;
+}
+</style>
+</head>
+<body>
+
+<div id="hearts-container"></div> 
+<script>
+function createFloatingHearts() {
+    const container = document.getElementById('hearts-container');
+    for(let i=0;i<25;i++){
+      let heart=document.createElement("div");
+      heart.className="heart";
+      heart.innerHTML="💖";
+      heart.style.left=Math.random()*100+"vw";
+      heart.style.animationDuration=(5+Math.random()*5)+"s";
+      heart.style.fontSize=(15+Math.random()*25)+"px";
+      container.appendChild(heart);
+    }
+}
+createFloatingHearts();
+</script>
+
+<div id="game">
+  <h2 style="margin-top:40px;color:#ff4d94;">เก็บหัวใจให้ครบ 5 ดวง 💕</h2>
+  <h3 id="score">0 / 5</h3>
+</div>
+
+<div class="container" id="page1">
+  <img src="flowers.png" class="main-img">
+  <button onclick="startGame()">Open Your Surprise 💌</button>
+</div>
+
+<div class="popup" id="popup">
+  <div class="pin-box">
+    <h3>กรอกรหัสผ่าน 💕</h3>
+    <small>คำใบ้ : ลองกดเป็นวันเดือนปีเกิดดีมั้ย</small>
+    <div class="pin-display">
+      <div class="pin-dot"></div><div class="pin-dot"></div><div class="pin-dot"></div>
+      <div class="pin-dot"></div><div class="pin-dot"></div><div class="pin-dot"></div>
+    </div>
+    <div class="keypad">
+      <button onclick="addNum(1)">1</button><button onclick="addNum(2)">2</button><button onclick="addNum(3)">3</button>
+      <button onclick="addNum(4)">4</button><button onclick="addNum(5)">5</button><button onclick="addNum(6)">6</button>
+      <button onclick="addNum(7)">7</button><button onclick="addNum(8)">8</button><button onclick="addNum(9)">9</button>
+      <button onclick="clearPin()">ลบ</button><button onclick="addNum(0)">0</button>
+      <button class="confirm" onclick="checkPin()">ยืนยัน</button>
+    </div>
+  </div>
+</div>
+
+<div class="gallery hidden" id="page3">
+  <canvas id="timeline-canvas"></canvas>
+  <h2>Our Memories Map 🔎</h2>
+  <p style="font-size: 14px; color: #666; margin-top: -15px; margin-bottom: 20px;">สืบหาร่องรอยความรัก... ลองขูดดูสิ ✨</p> 
+  <div class="grid" id="grid"></div>
+  <div class="message">
+    Happy Valentine's Day ขอบคุณที่เข้ามาทำให้ทุกวัน 😊<br>
+    ทุกความทรงจำคือเบาะแสที่ยืนยันว่าเรารักกันแค่ไหน 🌹
+  </div>
+  <br>
+  <button onclick="startQuizFlow()" style="background:#ff4d94; color:white;">ถัดไป: ทดสอบความจำ! 🧪</button>
+  <audio id="music" src="music.mp3" loop></audio>
+</div>
+
+<div id="quiz-page">
+    <div class="quiz-card">
+        <h2 id="quiz-title">รู้จักเราดีแค่ไหน</h2>
+        <p id="quiz-step">ข้อที่ 1 / 5</p>
+        <div class="question-box" id="question-text">เราเจอกันครั้งแรกที่ไหน?</div>
+        <div class="options" id="options-container"></div>
+        <div class="nav-btns">
+            <button class="btn-back" onclick="prevQuestion()">ย้อนกลับ</button>
+            <button class="btn-next" onclick="nextQuestion()">ถัดไป</button>
+        </div>
+    </div>
+</div>
+
+<div id="result-page">
+    <div class="heart-visual">
+        <svg class="heart-svg" viewBox="0 0 32 29.6">
+            <path class="heart-bg" d="M23.6,0c-3.4,0-6.3,2.7-7.6,5.6C14.7,2.7,11.8,0,8.4,0C3.8,0,0,3.8,0,8.4c0,9.4,9.5,11.9,16,21.2
+            c6.1-9.3,16-12.1,16-21.2C32,3.8,28.2,0,23.6,0z"/>
+            <clipPath id="heart-clip">
+                <rect id="clip-rect" x="0" y="30" width="32" height="30" />
+            </clipPath>
+            <path class="heart-fill-path" clip-path="url(#heart-clip)" d="M23.6,0c-3.4,0-6.3,2.7-7.6,5.6C14.7,2.7,11.8,0,8.4,0C3.8,0,0,3.8,0,8.4c0,9.4,9.5,11.9,16,21.2
+            c6.1-9.3,16-12.1,16-21.2C32,3.8,28.2,0,23.6,0z"/>
+        </svg>
+    </div>
+    <h2 id="percent-display">0%</h2>
+    <p id="result-message">เราใจตรงกันนะ!</p>
+    
+    <div class="result-btn-group">
+        <button onclick="restartQuiz()" style="background:white; color:#ff4d94;">เล่นใหม่อีกรอบ 🔄</button>
+        <div class="result-nav-btns">
+            <button class="btn-back" style="flex:1" onclick="backToStory()">ย้อนกลับ</button>
+            <button class="btn-next" style="flex:1; background:#ff4d94; color:white;" onclick="goToFinal()">ถัดไป</button>
+        </div>
+    </div>
+</div>
+
+<div id="final-page">
+    <img src="END.jpg" style="z-index: 20; position: relative;" class="main-img">
+    <h2 style="color: white; text-shadow: 1px 1px 5px rgba(0,0,0,0.2); z-index: 20; position: relative;">Happy Valentine's Day</h2>
+    <p style="color: white; padding: 20px; z-index: 20; position: relative;">ขอบคุณที่เล่นจนจบนะ หวังว่าเธอจะชอบเซอร์ไพรส์นี้นะ รักเธอที่สุดในโลกเลย! ❤️</p>
+    <button onclick="location.reload()" style="z-index: 20;">กลับหน้าแรก</button>
+</div>
+
+<script>
+let pin="";
+let score=0;
+let currentQuestion = 0;
+let userAnswers = []; 
+
+const questions = [
+    { q: "เราเจอกันครั้งแรกที่ไหน?", a: ["ออนไลน์", "โรงแรม", "ร้านกาแฟ", "มหาลัย"], correct: 1 }, 
+    { q: "ถ้าให้เลือกที่เที่ยวด้วยกันครั้งแรก พี่จะเลือกอะไร?", a: ["ทะเล", "ภูเขา", "คาเฟ่น่ารัก ๆ", "ดูหนังในโรง"], correct: 1 }, 
+    { q: "หนังที่เราไปดูใรโรงเรื่องแรกด้วยกัน คือเรื่องอะไร?", a: ["lilo & stitch", "ธี่หยด", "final destination bloodlines", "หลานม่า"], correct: 0 }, 
+    { q: "วันเกิดเอ็มวันที่เท่าไหร่?", a: ["18 มีนา", "14 กุมภา", "13 มีนา", "รหัสผ่านเมื่อกี้ไง"], correct: 0 }, 
+    { q: "สุดท้ายนี้... รักเรามั้ย?", a: ["รักที่สุด", "รักมากๆ", "รักมากกกก", "ถูกทุกข้อ"], correct: 3 } 
+];
+
+function startGame(){
+  document.getElementById("page1").style.display="none";
+  document.getElementById("game").style.display="block";
+  spawnHearts();
+}
+
+function spawnHearts(){
+  let interval=setInterval(()=>{
+    let heart=document.createElement("div");
+    heart.className="falling-heart";
+    heart.innerHTML="💖";
+    heart.style.left=Math.random()*90+"vw";
+    heart.style.animationDuration=(2+Math.random()*2)+"s";
+    heart.onclick=function(){
+      heart.remove();
+      score++;
+      document.getElementById("score").innerText=score+" / 5";
+      if(score>=5){
+        clearInterval(interval);
+        endGame();
+      }
+    };
+    document.getElementById("game").appendChild(heart);
+    setTimeout(()=>heart.remove(),4000);
+  },700);
+}
+
+function endGame(){
+  document.getElementById("game").style.display="none";
+  document.getElementById("popup").style.display="flex";
+}
+
+function addNum(num){
+  if(pin.length<6){
+    pin+=num;
+    updateDots();
+  }
+}
+function clearPin(){
+  pin="";
+  updateDots();
+}
+function updateDots(){
+  let dots=document.querySelectorAll(".pin-dot");
+  dots.forEach((dot,i)=>{
+    dot.classList.toggle("filled",i<pin.length);
+  });
+}
+
+function checkPin(){
+  if(pin==="130338"){
+    document.getElementById("popup").style.display="none";
+    document.getElementById("page3").classList.remove("hidden");
+    document.getElementById("music").play();
+    createPhotos();
+  }else{
+    alert("รหัสไม่ถูกต้องนะ 🤭");
+    clearPin();
+  }
+}
+
+function startQuizFlow() {
+    document.getElementById("page3").classList.add("hidden");
+    document.getElementById("quiz-page").style.display = "flex";
+    loadQuestion();
+}
+
+function loadQuestion() {
+    const q = questions[currentQuestion];
+    document.getElementById("quiz-step").innerText = `ข้อที่ ${currentQuestion + 1} / ${questions.length}`;
+    document.getElementById("question-text").innerText = q.q;
+    
+    const container = document.getElementById("options-container");
+    container.innerHTML = "";
+    q.a.forEach((opt, index) => {
+        const btn = document.createElement("button");
+        btn.className = "option-btn";
+        if(userAnswers[currentQuestion] === index) btn.classList.add("selected");
+        btn.innerText = opt;
+        btn.onclick = () => {
+            userAnswers[currentQuestion] = index; 
+            document.querySelectorAll(".option-btn").forEach(b => b.classList.remove("selected"));
+            btn.classList.add("selected");
+        };
+        container.appendChild(btn);
+    });
+}
+
+function nextQuestion() {
+    if (userAnswers[currentQuestion] === undefined) {
+        alert("เลือกคำตอบก่อนน้าา 💖");
+        return;
+    }
+
+    if (currentQuestion < questions.length - 1) {
+        currentQuestion++;
+        loadQuestion();
+    } else {
+        calculateResult();
+    }
+}
+
+function prevQuestion() {
+    if (currentQuestion > 0) {
+        currentQuestion--;
+        loadQuestion();
+    } else {
+        document.getElementById("quiz-page").style.display = "none";
+        document.getElementById("page3").classList.remove("hidden");
+    }
+}
+
+function calculateResult() {
+    let correctCount = 0;
+    questions.forEach((q, index) => {
+        if(userAnswers[index] === q.correct) {
+            correctCount++;
+        }
+    });
+
+    let percent = (correctCount / questions.length) * 100;
+    document.getElementById("quiz-page").style.display = "none";
+    document.getElementById("result-page").style.display = "flex";
+    document.getElementById("percent-display").innerText = percent + "%";
+    
+    setTimeout(() => {
+        const clipRect = document.getElementById('clip-rect');
+        const yValue = 30 - (percent * 30 / 100);
+        clipRect.setAttribute('y', yValue);
+    }, 100);
+    
+    let msg = "";
+    if(percent >= 80) msg = "เราใจตรงกันที่สุดเลย! รักนะ ❤️";
+    else if(percent >= 50) msg = "เราก็ยังใจตรงกันอยู่น้าา 😊";
+    else msg = "ถึงจะไม่ตรงกันบ้าง แต่ก็รักเหมือนเดิมนะ 🤭";
+    document.getElementById("result-message").innerText = msg;
+}
+
+function restartQuiz() {
+    currentQuestion = 0;
+    userAnswers = [];
+    document.getElementById("result-page").style.display = "none";
+    document.getElementById('clip-rect').setAttribute('y', 30);
+    startQuizFlow();
+}
+
+function backToStory() {
+    document.getElementById("result-page").style.display = "none";
+    document.getElementById("page3").classList.remove("hidden");
+}
+
+function goToFinal() {
+    document.getElementById("result-page").style.display = "none";
+    document.getElementById("final-page").style.display = "flex";
+}
+
+function typeWriter(element,text,speed=40){
+  let i=0;
+  function typing(){
+    if(i<text.length){
+      element.innerHTML+=text.charAt(i);
+      i++;
+      setTimeout(typing,speed);
+    }
+  }
+  typing();
+}
+
+// ข้อมูลข้อความและช่วงเวลา
+const messages=[
+"เบาะแสแรก: รูปแรกที่เจอกัน... สายตาดูมีพิรุธนะ 💕",
+"หลักฐานชิ้นที่ 2: ร้องไห้หนักมาก จำได้มั้ย? 😳",
+"บันทึกเหตุการณ์: ขอบคุณที่ไปรับนะ พยานยืนยันว่าน่ารักมาก 🥰",
+"พบวัตถุพยาน: มีคนเมาอีกแล้ว... สารภาพมาซะดีๆ! 🕵️",
+"สถานการณ์จำลอง: หิวจัดจนหน้ามืด 🤍",
+"ภาพถ่ายวงจรปิด: วันนั้นมันดีมากจริงๆ 🌸",
+"ปรับแต่งตัวตน: พาไปทำหล่อ หรือทำสวยน้า? 💫",
+"บันทึกความลับ: ภาพนี้คือภาพที่ชอบที่สุด 💖",
+"เป้าหมายสูงสุด: อาชีพในฝันของเรา 💌"
+];
+
+const dates = ["2022.10.23", "2024.11.30", "2025.05.04", "2025.08.03", "2025.12.05", "2025.12.05", "2026.02.06", "2026.02.06", "you choose"];
+
+function createPhotos(){
+  const grid=document.getElementById("grid");
+  if(grid.children.length>0) return;
+
+  for(let i=1; i<=9; i++){
+    let div=document.createElement("div");
+    div.className="polaroid";
+    // สุ่มการเอียงรูปให้เหมือนกระดานสืบสวน
+    const rot = (Math.random() * 20) - 10;
+    div.style.transform = `rotate(${rot}deg)`;
+
+    let dateTag = document.createElement("div");
+    dateTag.className = "date-tag";
+    dateTag.innerText = dates[i-1];
+
+    let img=document.createElement("img");
+    img.src=`love${i}.jpg`;
+    
+    let canvas=document.createElement("canvas");
+    canvas.className="canvas-cover";
+    
+    let caption=document.createElement("div");
+    caption.className="caption";
+
+    div.appendChild(dateTag);
+    div.appendChild(img);
+    div.appendChild(canvas);
+    div.appendChild(caption);
+    grid.appendChild(div);
+
+    img.onload=function(){
+      canvas.width=img.offsetWidth;
+      canvas.height=img.offsetHeight;
+      makeScratch(canvas);
+      // เมื่อรูปโหลดครบให้วาดเส้นโยง
+      if(i === 9) setTimeout(drawTimelineLines, 1000);
+    };
+
+    setTimeout(()=>{
+      typeWriter(caption, messages[i-1]);
+    },800+i*300);
+  }
+}
+
+function drawTimelineLines() {
+  const canvas = document.getElementById('timeline-canvas');
+  const ctx = canvas.getContext('2d');
+  const gallery = document.getElementById('page3');
+  
+  canvas.width = gallery.offsetWidth;
+  canvas.height = gallery.offsetHeight;
+
+  const photos = document.querySelectorAll('.polaroid');
+  
+  ctx.strokeStyle = 'rgba(214, 51, 132, 0.6)'; // สีแดงเข้มแบบเส้นด้าย
+  ctx.lineWidth = 2;
+  ctx.setLineDash([5, 5]); // เส้นประเพิ่มความดูเป็นแผนผัง
+
+  for (let i = 0; i < photos.length - 1; i++) {
+    const startRect = photos[i].getBoundingClientRect();
+    const endRect = photos[i+1].getBoundingClientRect();
+    const scrollLeft = window.pageXOffset || document.documentElement.scrollLeft;
+    const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+    const galleryRect = gallery.getBoundingClientRect();
+
+    const startX = startRect.left + startRect.width / 2 - galleryRect.left;
+    const startY = startRect.top + startRect.height / 2 - galleryRect.top;
+    const endX = endRect.left + endRect.width / 2 - galleryRect.left;
+    const endY = endRect.top + endRect.height / 2 - galleryRect.top;
+
+    ctx.beginPath();
+    ctx.moveTo(startX, startY);
+    ctx.lineTo(endX, endY);
+    ctx.stroke();
+  }
+}
+
+// อัปเดตเส้นเมื่อเปลี่ยนขนาดหน้าจอ
+window.addEventListener('resize', () => {
+    if(!document.getElementById('page3').classList.contains('hidden')) {
+        drawTimelineLines();
+    }
+});
+
+function makeScratch(canvas){
+  const ctx=canvas.getContext("2d");
+  const coverImage = new Image();
+  coverImage.src = "valentineday.jpg";
+  coverImage.onload = function(){
+    ctx.drawImage(coverImage,0,0,canvas.width,canvas.height);
+  };
+
+  const handleScratch = (e) => {
+    const rect=canvas.getBoundingClientRect();
+    const x = (e.clientX || e.touches[0].clientX) - rect.left;
+    const y = (e.clientY || e.touches[0].clientY) - rect.top;
+    ctx.globalCompositeOperation="destination-out";
+    ctx.beginPath();
+    ctx.arc(x, y, 30, 0, Math.PI*2);
+    ctx.fill();
+  };
+
+  canvas.addEventListener("mousemove",(e)=>{ if(e.buttons===1) handleScratch(e); });
+  canvas.addEventListener("touchmove",(e)=>{ handleScratch(e); e.preventDefault(); }, {passive: false});
+}
+</script>
+</body>
+</html>
